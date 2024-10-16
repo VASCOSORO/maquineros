@@ -36,7 +36,7 @@ if response.status_code == 200:
     # Inicializar el carrito para guardar los pedidos
     pedido = []
 
-    # Base URL para las imágenes del repositorio
+    # Base URL para las imágenes del repositorio (sin modificar los nombres de los productos)
     base_url = "https://github.com/VASCOSORO/maquineros/raw/main/"
     
     # Mostrar los productos de la hoja seleccionada
@@ -46,9 +46,8 @@ if response.status_code == 200:
     for index, row in df.iterrows():
         col1, col2 = st.columns([1, 3])
 
-        # Construir el nombre de la imagen y mostrarla si existe
-        imagen_url = base_url + row['nombre'].replace(" ", "_") + ".png"
-        st.write(f"URL de la imagen: {imagen_url}")  # Mostrar la URL para verificar si es correcta
+        # Construir el nombre de la imagen y mostrarla tal como está en el repositorio
+        imagen_url = base_url + row['nombre'] + ".png"
         with col1:
             st.image(imagen_url, width=150)
 
