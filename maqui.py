@@ -14,17 +14,22 @@ if response.status_code == 200:
     # Cargar el archivo Excel
     df = pd.read_excel(BytesIO(data))
 
-    # Limpiar los nombres de las columnas (en caso de que haya espacios)
+    # Limpiar los nombres de las columnas
     df.columns = df.columns.str.strip()
 
-    # Seleccionar las columnas correctas
-    df = df[['nombre', 'Precio', 'Bulto x']]
+    # Convertir la columna 'Bulto x' a enteros para eliminar decimales
+    df['Bulto x'] = df['Bulto x'].astype(int)
+
+    # Agregar la URL de las imágenes desde el repositorio en GitHub
+    base_url = "https://github.com/VASCOSORO/maquineros/raw/main/"
+    df['Imagen'] = df['nombre'].apply(lambda x: base_url + x.lower().replace(" ", "_") + ".png")
 
     # Configurar la interfaz de Streamlit
     st.title("Catálogo de Promociones")
 
-    # Mostrar los ítems del catálogo
+    # Mostrar los ítems del catálogo con imágenes
     for index, row in df.iterrows():
+        st.image(row['Imagen'], width=150)
         st.subheader(row['nombre'])
         st.write(f"Precio: ${row['Precio']}")
         st.write(f"Unidades por Bulto: {row['Bulto x']}")
