@@ -36,16 +36,20 @@ if response.status_code == 200:
     # Inicializar el carrito para guardar los pedidos
     pedido = []
 
+    # Base URL para las imágenes del repositorio
+    base_url = "https://github.com/VASCOSORO/maquineros/raw/main/"
+    
     # Mostrar los productos de la hoja seleccionada
     st.title(f"Catálogo de {selected_sheet}")
 
     # Función para manejar el pedido de productos
     for index, row in df.iterrows():
         col1, col2 = st.columns([1, 3])
-        
-        # Mostrar la imagen a la izquierda
+
+        # Construir el nombre de la imagen y mostrarla si existe
+        imagen_url = base_url + row['nombre'].replace(" ", "_") + ".png"
         with col1:
-            st.image(row['Imagen'], width=150)
+            st.image(imagen_url, width=150)
 
         # Mostrar el nombre, precio y la opción de agregar al pedido
         with col2:
