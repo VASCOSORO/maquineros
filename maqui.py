@@ -27,8 +27,9 @@ if response.status_code == 200:
     # Configurar la interfaz de Streamlit
     st.title("Catálogo de Promociones")
 
-    # Mostrar los ítems del catálogo con imágenes
+    # Mostrar los ítems del catálogo con las URLs de las imágenes
     for index, row in df.iterrows():
+        st.write(f"URL de la imagen: {row['Imagen']}")
         st.image(row['Imagen'], width=150)
         st.subheader(row['nombre'])
         st.write(f"Precio: ${row['Precio']}")
