@@ -62,7 +62,7 @@ if response.status_code == 200:
         # Mostrar el nombre, precio y la opción de agregar al pedido
         with col2:
             st.subheader(row['nombre'])
-            st.write(f"Precio por unidad: ${row['Precio']}")
+            st.write(f"Precio por unidad: ${row['Precio']:.2f}")
             
             # Verificar si la columna "Bulto x" existe antes de intentar usarla
             if 'Bulto x' in df.columns:
@@ -89,16 +89,16 @@ if response.status_code == 200:
     if st.session_state.pedido:
         st.markdown("### Resumen del Pedido")
         for producto, detalles in st.session_state.pedido.items():
-            # Mostrar el precio unitario, cantidad seleccionada y el subtotal
-            st.write(f"{producto} - Precio unitario: ${detalles['precio_unitario']} - Cantidad: {detalles['cantidad']} - Subtotal: ${detalles['subtotal']}")
+            # Mostrar el precio unitario, cantidad seleccionada y el subtotal con formato de moneda
+            st.write(f"{producto} - Precio unitario: ${detalles['precio_unitario']:.2f} - Cantidad: {detalles['cantidad']} - Subtotal: ${detalles['subtotal']:.2f}")
         
         # Mostrar el total del pedido
-        st.markdown(f"**Total del Pedido: ${st.session_state.total_pedido}**")
+        st.markdown(f"**Total del Pedido: ${st.session_state.total_pedido:.2f}**")
 
         # Crear el mensaje de WhatsApp
-        mensaje = "\n".join([f"{producto} - Precio unitario: ${detalles['precio_unitario']} - Cantidad: {detalles['cantidad']} - Subtotal: ${detalles['subtotal']}"
+        mensaje = "\n".join([f"{producto} - Precio unitario: ${detalles['precio_unitario']:.2f} - Cantidad: {detalles['cantidad']} - Subtotal: ${detalles['subtotal']:.2f}"
                              for producto, detalles in st.session_state.pedido.items()])
-        mensaje += f"\nTotal del Pedido: ${st.session_state.total_pedido}"
+        mensaje += f"\nTotal del Pedido: ${st.session_state.total_pedido:.2f}"
         whatsapp_url = f"https://wa.me/5491144042904?text={urllib.parse.quote(mensaje)}"
 
         # Botón para enviar el pedido por WhatsApp
