@@ -47,9 +47,14 @@ if response.status_code == 200:
     for index, row in df.iterrows():
         col1, col2 = st.columns([1, 3])
 
-        # Construir el nombre de la imagen codificando cualquier espacio o carácter especial
-        nombre_producto = urllib.parse.quote(row['nombre'])  # Codificar los espacios y caracteres especiales
-        imagen_url = base_url + nombre_producto + ".png"
+        # Verificación específica para las imágenes con espacios y números
+        if row['nombre'] == "Saltarina mod1 32mm":
+            imagen_url = base_url + "Saltarina%20mod1%2032mm.png"
+        elif row['nombre'] == "Saltarina mod2 32mm":
+            imagen_url = base_url + "Saltarina%20mod2%2032mm.png"
+        else:
+            # Codificar cualquier espacio o carácter especial en otros nombres
+            imagen_url = base_url + urllib.parse.quote(row['nombre']) + ".png"
 
         with col1:
             st.image(imagen_url, width=150)
