@@ -62,11 +62,13 @@ if response.status_code == 200:
             st.subheader(row['nombre'])
             st.write(f"Precio por unidad: ${row['Precio']}")
             
-            # Verificar si el valor de "Bulto x" es numérico y no nulo antes de convertirlo
-            if pd.notnull(row['Bulto x']) and isinstance(row['Bulto x'], (int, float)):
-                st.write(f"Unidades por Bulto: {int(row['Bulto x'])}")
-            else:
-                st.write(f"Unidades por Bulto: N/A")
+            # Verificar si la columna "Bulto x" existe antes de intentar usarla
+            if 'Bulto x' in df.columns:
+                # Verificar si el valor de "Bulto x" es numérico y no nulo antes de convertirlo
+                if pd.notnull(row['Bulto x']) and isinstance(row['Bulto x'], (int, float)):
+                    st.write(f"Unidades por Bulto: {int(row['Bulto x'])}")
+                else:
+                    st.write(f"Unidades por Bulto: N/A")
 
             # Seleccionar la cantidad para pedir
             cantidad = st.number_input(f"Cantidad de {row['nombre']}", min_value=0, step=1, key=f"cantidad_{index}")
