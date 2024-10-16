@@ -90,7 +90,8 @@ if response.status_code == 200:
         st.markdown("### Resumen del Pedido")
         for producto, detalles in st.session_state.pedido.items():
             # Mostrar el precio unitario, cantidad seleccionada y el subtotal con formato de moneda
-            st.write(f"{producto} - Precio unitario: ${detalles['precio_unitario']:.2f} - Cantidad: {detalles['cantidad']} - Subtotal: ${detalles['subtotal']:.2f}")
+            st.write(f"**{producto}**")
+            st.write(f"Precio unitario: ${detalles['precio_unitario']:.2f} — Cantidad: {detalles['cantidad']} — Subtotal: ${detalles['subtotal']:.2f}")
         
         # Mostrar el total del pedido
         st.markdown(f"**Total del Pedido: ${st.session_state.total_pedido:.2f}**")
