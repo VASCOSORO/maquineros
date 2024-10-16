@@ -25,7 +25,7 @@ if response.status_code == 200:
 
     # Inicializar `st.session_state` para el pedido si no está ya inicializado
     if "pedido" not in st.session_state:
-        st.session_state.pedido = []
+        st.session_state.pedido = {}
     if "total_pedido" not in st.session_state:
         st.session_state.total_pedido = 0
 
@@ -72,26 +72,32 @@ if response.status_code == 200:
                 else:
                     st.write(f"Unidades por Bulto: N/A")
 
-            # Seleccionar la cantidad para pedir
+            # Seleccionar la cantidad para pedir, almacenando en session_state
             cantidad = st.number_input(f"Cantidad de {row['nombre']}", min_value=0, step=1, key=f"cantidad_{index}")
             
-            # Si se selecciona cantidad mayor a 0, agregar al pedido
+            # Actualizar el pedido en session_state para evitar duplicados
             if cantidad > 0:
                 subtotal = cantidad * row['Precio']  # Calcular el subtotal del producto
-                st.session_state.total_pedido += subtotal  # Sumar el subtotal al total del pedido
-                st.session_state.pedido.append(f"{row['nombre']} - Cantidad: {cantidad}, Subtotal: ${subtotal}")
+                st.session_state.pedido[row['nombre']] = {'cantidad': cantidad, 'subtotal': subtotal}
+            elif row['nombre'] in st.session_state.pedido:
+                del st.session_state.pedido[row['nombre']]  # Eliminar del pedido si la cantidad es 0
+
+    # Calcular el total del pedido actualizado
+    st.session_state.total_pedido = sum(item['subtotal'] for item in st.session_state.pedido.values())
 
     # Mostrar el resumen del pedido acumulado en todas las hojas
     if st.session_state.pedido:
         st.markdown("### Resumen del Pedido")
-        for item in st.session_state.pedido:
-            st.write(item)
+        for producto, detalles in st.session_state.pedido.items():
+            st.write(f"{producto} - Cantidad: {detalles['cantidad']}, Subtotal: ${detalles['subtotal']}")
         
         # Mostrar el total del pedido
         st.markdown(f"**Total del Pedido: ${st.session_state.total_pedido}**")
 
         # Crear el mensaje de WhatsApp
-        mensaje = "\n".join(st.session_state.pedido) + f"\nTotal del Pedido: ${st.session_state.total_pedido}"
+        mensaje = "\n".join([f"{producto} - Cantidad: {detalles['cantidad']}, Subtotal: ${detalles['subtotal']}"
+                             for producto, detalles in st.session_state.pedido.items()])
+        mensaje += f"\nTotal del Pedido: ${st.session_state.total_pedido}"
         whatsapp_url = f"https://wa.me/5491144042904?text={urllib.parse.quote(mensaje)}"
 
         # Botón para enviar el pedido por WhatsApp
