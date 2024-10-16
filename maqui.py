@@ -25,7 +25,7 @@ if response.status_code == 200:
     df['Imagen'] = df['nombre'].apply(lambda x: base_url + x + ".png")
 
     # Configurar la interfaz de Streamlit
-    st.title("Catálogo de Promociones")
+    st.title("Catálogo Maquineros 2025")
 
     # Mostrar los ítems del catálogo con imagen a la izquierda y texto a la derecha
     for index, row in df.iterrows():
