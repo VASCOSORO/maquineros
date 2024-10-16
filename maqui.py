@@ -48,6 +48,7 @@ if response.status_code == 200:
 
         # Construir el nombre de la imagen y mostrarla si existe
         imagen_url = base_url + row['nombre'].replace(" ", "_") + ".png"
+        st.write(f"URL de la imagen: {imagen_url}")  # Mostrar la URL para verificar si es correcta
         with col1:
             st.image(imagen_url, width=150)
 
