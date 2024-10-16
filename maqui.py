@@ -10,7 +10,16 @@ url = "https://github.com/VASCOSORO/maquineros/raw/main/Catalogo_Limpio_Mini_Sup
 response = requests.get(url)
 if response.status_code == 200:
     data = response.content
-    df = pd.read_excel(BytesIO(data), sheet_name='Mini y Superbox', skiprows=2)
+
+    # Cargar el archivo Excel sin especificar la hoja
+    xls = pd.ExcelFile(BytesIO(data))
+    
+    # Mostrar los nombres de las hojas para asegurarnos del correcto
+    st.write("Nombres de las hojas en el archivo Excel:")
+    st.write(xls.sheet_names)
+
+    # Puedes elegir una hoja después de verificar el nombre correcto
+    df = pd.read_excel(BytesIO(data), sheet_name=xls.sheet_names[0], skiprows=2)  # Cambia la hoja si es necesario
 
     # Limpiar y renombrar las columnas
     df.columns = ['Unnamed', 'Precio', 'Cantidad', 'Bulto_x', 'Descripcion', 'Entrega', 'Octubre', 'Noviembre', 'Diciembre', 'Enero', 'Febrero']
