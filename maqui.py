@@ -15,7 +15,7 @@ if response.status_code == 200:
     # Cargar el archivo Excel
     xls = pd.ExcelFile(BytesIO(data))
 
-    # Renombrar las hojas
+    # Nombres descriptivos para cada hoja
     sheet_names = {
         "Hoja1": "Para Maquinas",
         "Hoja2": "Peluches 24 cm",
@@ -23,9 +23,9 @@ if response.status_code == 200:
         "Hoja4": "Pelotas"
     }
 
-    # Crear un desplegable para que el usuario seleccione una hoja
-    selected_sheet_key = st.selectbox("Selecciona una hoja", list(sheet_names.keys()))
-    selected_sheet = sheet_names[selected_sheet_key]
+    # Crear un desplegable para que el usuario seleccione una hoja, usando los nombres descriptivos
+    selected_sheet_title = st.selectbox("Selecciona una hoja", list(sheet_names.values()))
+    selected_sheet_key = [key for key, value in sheet_names.items() if value == selected_sheet_title][0]
 
     # Cargar los datos de la hoja seleccionada
     df = pd.read_excel(xls, sheet_name=selected_sheet_key)
@@ -41,14 +41,14 @@ if response.status_code == 200:
     base_url = "https://github.com/VASCOSORO/maquineros/raw/main/"
     
     # Mostrar los productos de la hoja seleccionada
-    st.title(f"Catálogo de {selected_sheet}")
+    st.title(f"Catálogo de {selected_sheet_title}")
 
     # Función para manejar el pedido de productos
     for index, row in df.iterrows():
         col1, col2 = st.columns([1, 3])
 
-        # Verificación específica para las imágenes con espacios y números
-        nombre_producto = row['nombre'].strip()  # Asegurar que no haya espacios adicionales
+        # Codificar correctamente los nombres de los archivos de imágenes
+        nombre_producto = row['nombre'].strip()  # Asegurarse de que no haya espacios adicionales
         nombre_producto_codificado = urllib.parse.quote(nombre_producto)
 
         # Construir la URL de la imagen
