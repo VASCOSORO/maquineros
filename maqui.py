@@ -47,8 +47,13 @@ if response.status_code == 200:
     for index, row in df.iterrows():
         col1, col2 = st.columns([1, 3])
 
-        # Construir el nombre de la imagen y mostrarla
-        imagen_url = base_url + row['nombre'] + ".png"
+        # Corregir el nombre de la imagen si es "Squishy Kitty y patitas mascotas"
+        if row['nombre'] == "Squishy Kitty y patitas mascotas":
+            imagen_url = base_url + "Squishy%20Kitty%20y%20patitas%20mascotas.png"
+        else:
+            # Construir el nombre de la imagen de forma regular
+            imagen_url = base_url + row['nombre'] + ".png"
+
         with col1:
             st.image(imagen_url, width=150)
 
