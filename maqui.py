@@ -61,9 +61,12 @@ if response.status_code == 200:
         with col2:
             st.subheader(row['nombre'])
             st.write(f"Precio por unidad: ${row['Precio']}")
-            if 'Bulto x' in df.columns:
-                # Mostrar las unidades por bulto como un entero sin comas
+            
+            # Verificar si el valor de "Bulto x" es numérico y no nulo antes de convertirlo
+            if pd.notnull(row['Bulto x']) and isinstance(row['Bulto x'], (int, float)):
                 st.write(f"Unidades por Bulto: {int(row['Bulto x'])}")
+            else:
+                st.write(f"Unidades por Bulto: N/A")
 
             # Seleccionar la cantidad para pedir
             cantidad = st.number_input(f"Cantidad de {row['nombre']}", min_value=0, step=1, key=f"cantidad_{index}")
