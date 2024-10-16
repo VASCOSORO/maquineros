@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 from io import BytesIO
+import urllib.parse
 
 # URL del archivo Excel en GitHub
 url = "https://github.com/VASCOSORO/maquineros/raw/main/Temporada25.xlsx"
@@ -14,40 +15,63 @@ if response.status_code == 200:
     # Cargar el archivo Excel
     xls = pd.ExcelFile(BytesIO(data))
 
-    # Obtener los nombres de las hojas
-    sheet_names = xls.sheet_names
+    # Renombrar las hojas
+    sheet_names = {
+        "Hoja1": "Para Maquinas",
+        "Hoja2": "Peluches 24 cm",
+        "Hoja3": "Relojes",
+        "Hoja4": "Pelotas"
+    }
 
     # Crear un desplegable para que el usuario seleccione una hoja
-    selected_sheet = st.selectbox("Selecciona una hoja", sheet_names)
+    selected_sheet_key = st.selectbox("Selecciona una hoja", list(sheet_names.keys()))
+    selected_sheet = sheet_names[selected_sheet_key]
 
     # Cargar los datos de la hoja seleccionada
-    df = pd.read_excel(xls, sheet_name=selected_sheet)
+    df = pd.read_excel(xls, sheet_name=selected_sheet_key)
 
     # Limpiar los nombres de las columnas
     df.columns = df.columns.str.strip()
 
-    # Reemplazar NaN en 'Bulto x' con 0 para las hojas que lo necesiten
-    if 'Bulto x' in df.columns:
-        df['Bulto x'] = df['Bulto x'].fillna(0).astype(int)
+    # Inicializar el carrito para guardar los pedidos
+    pedido = []
 
-    # Agregar la URL de las imágenes desde el repositorio en GitHub (sin transformar el nombre)
-    base_url = "https://github.com/VASCOSORO/maquineros/raw/main/"
-    df['Imagen'] = df['nombre'].apply(lambda x: base_url + x + ".png")
-
-    # Configurar la interfaz de Streamlit
+    # Mostrar los productos de la hoja seleccionada
     st.title(f"Catálogo de {selected_sheet}")
 
-    # Mostrar los ítems del catálogo con imagen a la izquierda y texto a la derecha
+    # Función para manejar el pedido de productos
     for index, row in df.iterrows():
-        st.markdown(f"""
-        <div style="display: flex; align-items: center; margin-bottom: 20px;">
-            <img src="{row['Imagen']}" width="150" style="margin-right: 20px;">
-            <div>
-                <h3>{row['nombre']}</h3>
-                <p>Precio: ${row['Precio']}</p>
-                {"<p>Unidades por Bulto: {row['Bulto x']}</p>" if 'Bulto x' in df.columns else ""}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        col1, col2 = st.columns([1, 3])
+        
+        # Mostrar la imagen a la izquierda
+        with col1:
+            st.image(row['Imagen'], width=150)
+
+        # Mostrar el nombre, precio y la opción de agregar al pedido
+        with col2:
+            st.subheader(row['nombre'])
+            st.write(f"Precio: ${row['Precio']}")
+            if 'Bulto x' in df.columns:
+                st.write(f"Unidades por Bulto: {row['Bulto x']}")
+
+            # Seleccionar la cantidad para pedir
+            cantidad = st.number_input(f"Cantidad de {row['nombre']}", min_value=0, step=1, key=f"cantidad_{index}")
+            if cantidad > 0:
+                pedido.append(f"{row['nombre']} - Cantidad: {cantidad}, Precio por unidad: ${row['Precio']}")
+
+    # Si hay productos en el pedido, mostrar el resumen y opción de enviar por WhatsApp
+    if pedido:
+        st.markdown("### Resumen del Pedido")
+        for item in pedido:
+            st.write(item)
+
+        # Crear el mensaje de WhatsApp
+        mensaje = "\n".join(pedido)
+        whatsapp_url = f"https://wa.me/5491144042904?text={urllib.parse.quote(mensaje)}"
+
+        # Botón para enviar el pedido por WhatsApp
+        if st.button("Enviar pedido por WhatsApp"):
+            st.markdown(f"[Enviar pedido por WhatsApp]({whatsapp_url})")
+
 else:
     st.error("No se pudo descargar el archivo Excel. Verifica la URL.")
