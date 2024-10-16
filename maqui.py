@@ -23,6 +23,12 @@ if response.status_code == 200:
         "Hoja4": "Pelotas"
     }
 
+    # Inicializar `st.session_state` para el pedido si no está ya inicializado
+    if "pedido" not in st.session_state:
+        st.session_state.pedido = []
+    if "total_pedido" not in st.session_state:
+        st.session_state.total_pedido = 0
+
     # Crear un desplegable para que el usuario seleccione una hoja, usando los nombres descriptivos
     selected_sheet_title = st.selectbox("Selecciona una hoja", list(sheet_names.values()))
     selected_sheet_key = [key for key, value in sheet_names.items() if value == selected_sheet_title][0]
@@ -32,10 +38,6 @@ if response.status_code == 200:
 
     # Limpiar los nombres de las columnas
     df.columns = df.columns.str.strip()
-
-    # Inicializar el carrito para guardar los pedidos
-    pedido = []
-    total_pedido = 0  # Inicializar el total del pedido
 
     # Base URL para las imágenes del repositorio
     base_url = "https://github.com/VASCOSORO/maquineros/raw/main/"
@@ -76,20 +78,20 @@ if response.status_code == 200:
             # Si se selecciona cantidad mayor a 0, agregar al pedido
             if cantidad > 0:
                 subtotal = cantidad * row['Precio']  # Calcular el subtotal del producto
-                total_pedido += subtotal  # Sumar el subtotal al total del pedido
-                pedido.append(f"{row['nombre']} - Cantidad: {cantidad}, Subtotal: ${subtotal}")
+                st.session_state.total_pedido += subtotal  # Sumar el subtotal al total del pedido
+                st.session_state.pedido.append(f"{row['nombre']} - Cantidad: {cantidad}, Subtotal: ${subtotal}")
 
-    # Si hay productos en el pedido, mostrar el resumen y opción de enviar por WhatsApp
-    if pedido:
+    # Mostrar el resumen del pedido acumulado en todas las hojas
+    if st.session_state.pedido:
         st.markdown("### Resumen del Pedido")
-        for item in pedido:
+        for item in st.session_state.pedido:
             st.write(item)
         
         # Mostrar el total del pedido
-        st.markdown(f"**Total del Pedido: ${total_pedido}**")
+        st.markdown(f"**Total del Pedido: ${st.session_state.total_pedido}**")
 
         # Crear el mensaje de WhatsApp
-        mensaje = "\n".join(pedido) + f"\nTotal del Pedido: ${total_pedido}"
+        mensaje = "\n".join(st.session_state.pedido) + f"\nTotal del Pedido: ${st.session_state.total_pedido}"
         whatsapp_url = f"https://wa.me/5491144042904?text={urllib.parse.quote(mensaje)}"
 
         # Botón para enviar el pedido por WhatsApp
