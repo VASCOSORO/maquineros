@@ -11,21 +11,15 @@ response = requests.get(url)
 if response.status_code == 200:
     data = response.content
 
-    # Cargar el archivo Excel sin especificar la hoja
+    # Cargar el archivo Excel y mostrar las primeras filas para inspeccionar la estructura
     df = pd.read_excel(BytesIO(data), skiprows=2)
 
-    # Limpiar y renombrar las columnas si es necesario
-    df.columns = ['Unnamed', 'Precio', 'Cantidad', 'Bulto_x', 'Descripcion', 'Entrega', 'Octubre', 'Noviembre', 'Diciembre', 'Enero', 'Febrero']
-    df = df[['Descripcion', 'Precio', 'Bulto_x']]  # Solo las columnas que nos interesan
+    # Mostrar los nombres de las columnas
+    st.write("Columnas en el archivo Excel:")
+    st.write(df.columns)
 
-    # Configurar la interfaz de Streamlit
-    st.title("Catálogo de Promociones")
+    # Mostrar las primeras filas para inspección
+    st.write(df.head())
 
-    # Mostrar los ítems del catálogo
-    for index, row in df.iterrows():
-        st.subheader(row['Descripcion'])
-        st.write(f"Precio: ${row['Precio']}")
-        st.write(f"Unidades por Bulto: {row['Bulto_x']}")
-        st.write("---")
 else:
     st.error("No se pudo descargar el archivo Excel. Verifica la URL.")
