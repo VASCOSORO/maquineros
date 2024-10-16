@@ -48,7 +48,8 @@ if response.status_code == 200:
         col1, col2 = st.columns([1, 3])
 
         # Construir el nombre de la imagen codificando cualquier espacio o carácter especial
-        imagen_url = base_url + urllib.parse.quote(row['nombre']) + ".png"
+        nombre_producto = urllib.parse.quote(row['nombre'])  # Codificar los espacios y caracteres especiales
+        imagen_url = base_url + nombre_producto + ".png"
 
         with col1:
             st.image(imagen_url, width=150)
