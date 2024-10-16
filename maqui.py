@@ -78,7 +78,7 @@ if response.status_code == 200:
             # Actualizar el pedido en session_state para evitar duplicados
             if cantidad > 0:
                 subtotal = cantidad * row['Precio']  # Calcular el subtotal del producto
-                st.session_state.pedido[row['nombre']] = {'cantidad': cantidad, 'subtotal': subtotal}
+                st.session_state.pedido[row['nombre']] = {'cantidad': cantidad, 'precio_unitario': row['Precio'], 'subtotal': subtotal}
             elif row['nombre'] in st.session_state.pedido:
                 del st.session_state.pedido[row['nombre']]  # Eliminar del pedido si la cantidad es 0
 
@@ -89,13 +89,14 @@ if response.status_code == 200:
     if st.session_state.pedido:
         st.markdown("### Resumen del Pedido")
         for producto, detalles in st.session_state.pedido.items():
-            st.write(f"{producto} - Cantidad: {detalles['cantidad']}, Subtotal: ${detalles['subtotal']}")
+            # Mostrar el precio unitario, cantidad seleccionada y el subtotal
+            st.write(f"{producto} - Precio unitario: ${detalles['precio_unitario']} - Cantidad: {detalles['cantidad']} - Subtotal: ${detalles['subtotal']}")
         
         # Mostrar el total del pedido
         st.markdown(f"**Total del Pedido: ${st.session_state.total_pedido}**")
 
         # Crear el mensaje de WhatsApp
-        mensaje = "\n".join([f"{producto} - Cantidad: {detalles['cantidad']}, Subtotal: ${detalles['subtotal']}"
+        mensaje = "\n".join([f"{producto} - Precio unitario: ${detalles['precio_unitario']} - Cantidad: {detalles['cantidad']} - Subtotal: ${detalles['subtotal']}"
                              for producto, detalles in st.session_state.pedido.items()])
         mensaje += f"\nTotal del Pedido: ${st.session_state.total_pedido}"
         whatsapp_url = f"https://wa.me/5491144042904?text={urllib.parse.quote(mensaje)}"
