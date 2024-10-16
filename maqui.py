@@ -27,13 +27,18 @@ if response.status_code == 200:
     # Configurar la interfaz de Streamlit
     st.title("Catálogo de Promociones")
 
-    # Mostrar los ítems del catálogo con las URLs de las imágenes
+    # Mostrar los ítems del catálogo con imagen a la izquierda y texto a la derecha
     for index, row in df.iterrows():
-        st.write(f"URL de la imagen: {row['Imagen']}")
-        st.image(row['Imagen'], width=150)
-        st.subheader(row['nombre'])
-        st.write(f"Precio: ${row['Precio']}")
-        st.write(f"Unidades por Bulto: {row['Bulto x']}")
-        st.write("---")
+        st.markdown(f"""
+        <div style="display: flex; align-items: center; margin-bottom: 20px;">
+            <img src="{row['Imagen']}" width="150" style="margin-right: 20px;">
+            <div>
+                <h3>{row['nombre']}</h3>
+                <p>Precio: ${row['Precio']}</p>
+                <p>Unidades por Bulto: {row['Bulto x']}</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
 else:
     st.error("No se pudo descargar el archivo Excel. Verifica la URL.")
