@@ -11,18 +11,25 @@ response = requests.get(url)
 if response.status_code == 200:
     data = response.content
 
-    # Cargar el archivo Excel y trabajar con las columnas adecuadas
+    # Cargar el archivo Excel
     df = pd.read_excel(BytesIO(data))
 
-    # Mantener solo las columnas relevantes
-    df = df[['nombre', 'Precio', 'Bulto x']]
+    # Limpiar los nombres de las columnas
+    df.columns = df.columns.str.strip()
+
+    # Mostrar los nombres de las columnas para verificar
+    st.write("**Columnas en el archivo Excel después de limpiar:**")
+    st.write(df.columns.tolist())
+
+    # Seleccionar las columnas relevantes (ajusta los nombres según sea necesario)
+    df = df[['Nombre', 'Precio', 'Bulto x']]
 
     # Configurar la interfaz de Streamlit
     st.title("Catálogo de Promociones")
 
     # Mostrar los ítems del catálogo
     for index, row in df.iterrows():
-        st.subheader(row['nombre'])
+        st.subheader(row['Nombre'])
         st.write(f"Precio: ${row['Precio']}")
         st.write(f"Unidades por Bulto: {row['Bulto x']}")
         st.write("---")
