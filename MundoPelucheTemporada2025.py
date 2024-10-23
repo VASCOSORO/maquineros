@@ -5,7 +5,7 @@ from io import BytesIO
 import urllib.parse
 import zipfile
 from openpyxl import Workbook
-from openpyxl.drawing.image import Image
+from openpyxl.drawing.image import Image as ExcelImage
 from PIL import Image as PILImage
 import tempfile
 
@@ -111,6 +111,39 @@ if response.status_code == 200:
         if st.button("Enviar pedido por WhatsApp"):
             st.markdown(f"[Enviar pedido por WhatsApp]({whatsapp_url})")
 
+        # Agregar botón para descargar las imágenes de los productos pedidos
+        if st.button("Descargar imágenes de los productos pedidos"):
+            # Crear un archivo ZIP en memoria
+            zip_buffer = BytesIO()
+            
+            with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+                for producto, detalles in st.session_state.pedido.items():
+                    # Codificar correctamente los nombres de los archivos de imágenes
+                    nombre_producto = producto.strip()  # Asegurarse de que no haya espacios adicionales
+                    nombre_producto_codificado = urllib.parse.quote(nombre_producto)
+                    
+                    # Construir la URL de la imagen
+                    imagen_url = base_url + nombre_producto_codificado + ".png"
+                    
+                    # Descargar la imagen
+                    img_response = requests.get(imagen_url)
+                    if img_response.status_code == 200:
+                        # Agregar la imagen al archivo ZIP
+                        zip_file.writestr(f"{producto}.png", img_response.content)
+                    else:
+                        st.warning(f"No se pudo descargar la imagen de {producto}")
+            
+            # Asegurarse de que el buffer esté al inicio
+            zip_buffer.seek(0)
+            
+            # Generar enlace de descarga
+            st.download_button(
+                label="Descargar imágenes en ZIP",
+                data=zip_buffer,
+                file_name="imagenes_pedido.zip",
+                mime="application/zip"
+            )
+
         # Solicitar contraseña para habilitar la descarga del Excel
         contraseña = st.text_input("Ingresa la contraseña para descargar el Excel", type="password")
 
@@ -124,6 +157,13 @@ if response.status_code == 200:
 
                 # Encabezados
                 ws.append(["Producto", "Precio Unitario", "Cantidad", "Unidades por Bulto", "Imagen"])
+
+                # Ajustar ancho de las columnas
+                ws.column_dimensions['A'].width = 30
+                ws.column_dimensions['B'].width = 15
+                ws.column_dimensions['C'].width = 10
+                ws.column_dimensions['D'].width = 20
+                ws.column_dimensions['E'].width = 30  # Columna para imágenes
 
                 # Agregar productos al archivo Excel
                 for producto, detalles in st.session_state.pedido.items():
@@ -139,18 +179,15 @@ if response.status_code == 200:
                             tmpfile.write(img_response.content)
                             tmpfile_path = tmpfile.name
                         
-                        # Insertar la imagen y la fila correspondiente en Excel
-                        img = PILImage.open(tmpfile_path)
-                        img = img.resize((100, 100))  # Redimensionar la imagen para Excel
-                        img.save(tmpfile_path)
-
-                        # Insertar datos del producto y la imagen en el Excel
-                        ws.append([producto, detalles['precio_unitario'], detalles['cantidad'], detalles['unidades_bulto']])
-                        img_excel = Image(tmpfile_path)
+                        # Insertar datos del producto y la imagen en Excel
+                        ws.append([producto, f"${detalles['precio_unitario']:.2f}", detalles['cantidad'], detalles['unidades_bulto']])
+                        img_excel = ExcelImage(tmpfile_path)
+                        img_excel.width = 100  # Ajustar el ancho de la imagen
+                        img_excel.height = 100  # Ajustar el alto de la imagen
                         ws.add_image(img_excel, f"E{ws.max_row}")
                     else:
                         # Insertar datos sin imagen si la descarga falla
-                        ws.append([producto, detalles['precio_unitario'], detalles['cantidad'], detalles['unidades_bulto'], "No disponible"])
+                        ws.append([producto, f"${detalles['precio_unitario']:.2f}", detalles['cantidad'], detalles['unidades_bulto'], "No disponible"])
 
                 # Guardar el archivo Excel en memoria
                 excel_buffer = BytesIO()
