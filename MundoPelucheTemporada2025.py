@@ -4,6 +4,10 @@ import requests
 from io import BytesIO
 import urllib.parse
 import zipfile
+from openpyxl import Workbook
+from openpyxl.drawing.image import Image
+from PIL import Image as PILImage
+import tempfile
 
 # URL del archivo Excel en GitHub
 url = "https://github.com/VASCOSORO/maquineros/raw/main/Temporada25.xlsx"
@@ -79,7 +83,7 @@ if response.status_code == 200:
             # Actualizar el pedido en session_state para evitar duplicados
             if cantidad > 0:
                 subtotal = cantidad * row['Precio']  # Calcular el subtotal del producto
-                st.session_state.pedido[row['nombre']] = {'cantidad': cantidad, 'precio_unitario': row['Precio'], 'subtotal': subtotal}
+                st.session_state.pedido[row['nombre']] = {'cantidad': cantidad, 'precio_unitario': row['Precio'], 'subtotal': subtotal, 'unidades_bulto': row.get('Bulto x', 'N/A')}
             elif row['nombre'] in st.session_state.pedido:
                 del st.session_state.pedido[row['nombre']]  # Eliminar del pedido si la cantidad es 0
 
@@ -107,38 +111,59 @@ if response.status_code == 200:
         if st.button("Enviar pedido por WhatsApp"):
             st.markdown(f"[Enviar pedido por WhatsApp]({whatsapp_url})")
 
-        # Agregar botón para descargar las imágenes de los productos pedidos
-        if st.button("Descargar imágenes de los productos pedidos"):
-            # Crear un archivo ZIP en memoria
-            zip_buffer = BytesIO()
-            
-            with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+        # Solicitar contraseña para habilitar la descarga del Excel
+        contraseña = st.text_input("Ingresa la contraseña para descargar el Excel", type="password")
+
+        # Validar la contraseña
+        if contraseña == "Rosebud":
+            if st.button("Descargar Excel con imágenes"):
+                # Crear un archivo Excel en memoria
+                wb = Workbook()
+                ws = wb.active
+                ws.title = "Pedido"
+
+                # Encabezados
+                ws.append(["Producto", "Precio Unitario", "Cantidad", "Unidades por Bulto", "Imagen"])
+
+                # Agregar productos al archivo Excel
                 for producto, detalles in st.session_state.pedido.items():
                     # Codificar correctamente los nombres de los archivos de imágenes
-                    nombre_producto = producto.strip()  # Asegurarse de que no haya espacios adicionales
-                    nombre_producto_codificado = urllib.parse.quote(nombre_producto)
-                    
-                    # Construir la URL de la imagen
+                    nombre_producto_codificado = urllib.parse.quote(producto.strip())
                     imagen_url = base_url + nombre_producto_codificado + ".png"
                     
                     # Descargar la imagen
                     img_response = requests.get(imagen_url)
                     if img_response.status_code == 200:
-                        # Agregar la imagen al archivo ZIP
-                        zip_file.writestr(f"{producto}.png", img_response.content)
+                        # Guardar temporalmente la imagen
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
+                            tmpfile.write(img_response.content)
+                            tmpfile_path = tmpfile.name
+                        
+                        # Insertar la imagen y la fila correspondiente en Excel
+                        img = PILImage.open(tmpfile_path)
+                        img = img.resize((100, 100))  # Redimensionar la imagen para Excel
+                        img.save(tmpfile_path)
+
+                        # Insertar datos del producto y la imagen en el Excel
+                        ws.append([producto, detalles['precio_unitario'], detalles['cantidad'], detalles['unidades_bulto']])
+                        img_excel = Image(tmpfile_path)
+                        ws.add_image(img_excel, f"E{ws.max_row}")
                     else:
-                        st.warning(f"No se pudo descargar la imagen de {producto}")
-            
-            # Asegurarse de que el buffer esté al inicio
-            zip_buffer.seek(0)
-            
-            # Generar enlace de descarga
-            st.download_button(
-                label="Descargar imágenes en ZIP",
-                data=zip_buffer,
-                file_name="imagenes_pedido.zip",
-                mime="application/zip"
-            )
+                        # Insertar datos sin imagen si la descarga falla
+                        ws.append([producto, detalles['precio_unitario'], detalles['cantidad'], detalles['unidades_bulto'], "No disponible"])
+
+                # Guardar el archivo Excel en memoria
+                excel_buffer = BytesIO()
+                wb.save(excel_buffer)
+                excel_buffer.seek(0)
+
+                # Descargar el archivo Excel
+                st.download_button(
+                    label="Descargar Excel",
+                    data=excel_buffer,
+                    file_name="pedido_con_imagenes.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
 
 else:
     st.error("No se pudo descargar el archivo Excel. Verifica la URL.")
