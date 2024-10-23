@@ -144,63 +144,67 @@ if response.status_code == 200:
                 mime="application/zip"
             )
 
-        # Solicitar contraseña para habilitar la descarga del Excel
-        contraseña = st.text_input("Ingresa la contraseña para descargar el Excel", type="password")
+        # Mostrar checkbox para habilitar la opción del Excel
+        mostrar_excel = st.checkbox("Exc")
 
-        # Validar la contraseña
-        if contraseña == "Rosebud":
-            if st.button("Descargar Excel con imágenes"):
-                # Crear un archivo Excel en memoria
-                wb = Workbook()
-                ws = wb.active
-                ws.title = "Pedido"
+        if mostrar_excel:
+            # Solicitar contraseña para habilitar la descarga del Excel
+            contraseña = st.text_input("Ingresa la contraseña para descargar el Excel", type="password")
 
-                # Encabezados
-                ws.append(["Producto", "Precio Unitario", "Cantidad", "Unidades por Bulto", "Imagen"])
+            # Validar la contraseña
+            if contraseña == "Rosebud":
+                if st.button("Descargar Excel con imágenes"):
+                    # Crear un archivo Excel en memoria
+                    wb = Workbook()
+                    ws = wb.active
+                    ws.title = "Pedido"
 
-                # Ajustar ancho de las columnas
-                ws.column_dimensions['A'].width = 30
-                ws.column_dimensions['B'].width = 15
-                ws.column_dimensions['C'].width = 10
-                ws.column_dimensions['D'].width = 20
-                ws.column_dimensions['E'].width = 30  # Columna para imágenes
+                    # Encabezados
+                    ws.append(["Producto", "Precio Unitario", "Cantidad", "Unidades por Bulto", "Imagen"])
 
-                # Agregar productos al archivo Excel
-                for producto, detalles in st.session_state.pedido.items():
-                    # Codificar correctamente los nombres de los archivos de imágenes
-                    nombre_producto_codificado = urllib.parse.quote(producto.strip())
-                    imagen_url = base_url + nombre_producto_codificado + ".png"
-                    
-                    # Descargar la imagen
-                    img_response = requests.get(imagen_url)
-                    if img_response.status_code == 200:
-                        # Guardar temporalmente la imagen
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
-                            tmpfile.write(img_response.content)
-                            tmpfile_path = tmpfile.name
+                    # Ajustar ancho de las columnas
+                    ws.column_dimensions['A'].width = 30
+                    ws.column_dimensions['B'].width = 15
+                    ws.column_dimensions['C'].width = 10
+                    ws.column_dimensions['D'].width = 20
+                    ws.column_dimensions['E'].width = 30  # Columna para imágenes
+
+                    # Agregar productos al archivo Excel
+                    for producto, detalles in st.session_state.pedido.items():
+                        # Codificar correctamente los nombres de los archivos de imágenes
+                        nombre_producto_codificado = urllib.parse.quote(producto.strip())
+                        imagen_url = base_url + nombre_producto_codificado + ".png"
                         
-                        # Insertar datos del producto y la imagen en Excel
-                        ws.append([producto, f"${detalles['precio_unitario']:.2f}", detalles['cantidad'], detalles['unidades_bulto']])
-                        img_excel = ExcelImage(tmpfile_path)
-                        img_excel.width = 100  # Ajustar el ancho de la imagen
-                        img_excel.height = 100  # Ajustar el alto de la imagen
-                        ws.add_image(img_excel, f"E{ws.max_row}")
-                    else:
-                        # Insertar datos sin imagen si la descarga falla
-                        ws.append([producto, f"${detalles['precio_unitario']:.2f}", detalles['cantidad'], detalles['unidades_bulto'], "No disponible"])
+                        # Descargar la imagen
+                        img_response = requests.get(imagen_url)
+                        if img_response.status_code == 200:
+                            # Guardar temporalmente la imagen
+                            with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
+                                tmpfile.write(img_response.content)
+                                tmpfile_path = tmpfile.name
+                            
+                            # Insertar datos del producto y la imagen en Excel
+                            ws.append([producto, f"${detalles['precio_unitario']:.2f}", detalles['cantidad'], detalles['unidades_bulto']])
+                            img_excel = ExcelImage(tmpfile_path)
+                            img_excel.width = 100  # Ajustar el ancho de la imagen
+                            img_excel.height = 100  # Ajustar el alto de la imagen
+                            ws.add_image(img_excel, f"E{ws.max_row}")
+                        else:
+                            # Insertar datos sin imagen si la descarga falla
+                            ws.append([producto, f"${detalles['precio_unitario']:.2f}", detalles['cantidad'], detalles['unidades_bulto'], "No disponible"])
 
-                # Guardar el archivo Excel en memoria
-                excel_buffer = BytesIO()
-                wb.save(excel_buffer)
-                excel_buffer.seek(0)
+                    # Guardar el archivo Excel en memoria
+                    excel_buffer = BytesIO()
+                    wb.save(excel_buffer)
+                    excel_buffer.seek(0)
 
-                # Descargar el archivo Excel
-                st.download_button(
-                    label="Descargar Excel",
-                    data=excel_buffer,
-                    file_name="pedido_con_imagenes.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
+                    # Descargar el archivo Excel
+                    st.download_button(
+                        label="Descargar Excel",
+                        data=excel_buffer,
+                        file_name="pedido_con_imagenes.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
 
 else:
     st.error("No se pudo descargar el archivo Excel. Verifica la URL.")
