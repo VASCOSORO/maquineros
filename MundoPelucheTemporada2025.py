@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 from io import BytesIO
 import urllib.parse
+import zipfile
 
 # URL del archivo Excel en GitHub
 url = "https://github.com/VASCOSORO/maquineros/raw/main/Temporada25.xlsx"
@@ -105,6 +106,39 @@ if response.status_code == 200:
         # Botón para enviar el pedido por WhatsApp
         if st.button("Enviar pedido por WhatsApp"):
             st.markdown(f"[Enviar pedido por WhatsApp]({whatsapp_url})")
+
+        # Agregar botón para descargar las imágenes de los productos pedidos
+        if st.button("Descargar imágenes de los productos pedidos"):
+            # Crear un archivo ZIP en memoria
+            zip_buffer = BytesIO()
+            
+            with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+                for producto, detalles in st.session_state.pedido.items():
+                    # Codificar correctamente los nombres de los archivos de imágenes
+                    nombre_producto = producto.strip()  # Asegurarse de que no haya espacios adicionales
+                    nombre_producto_codificado = urllib.parse.quote(nombre_producto)
+                    
+                    # Construir la URL de la imagen
+                    imagen_url = base_url + nombre_producto_codificado + ".png"
+                    
+                    # Descargar la imagen
+                    img_response = requests.get(imagen_url)
+                    if img_response.status_code == 200:
+                        # Agregar la imagen al archivo ZIP
+                        zip_file.writestr(f"{producto}.png", img_response.content)
+                    else:
+                        st.warning(f"No se pudo descargar la imagen de {producto}")
+            
+            # Asegurarse de que el buffer esté al inicio
+            zip_buffer.seek(0)
+            
+            # Generar enlace de descarga
+            st.download_button(
+                label="Descargar imágenes en ZIP",
+                data=zip_buffer,
+                file_name="imagenes_pedido.zip",
+                mime="application/zip"
+            )
 
 else:
     st.error("No se pudo descargar el archivo Excel. Verifica la URL.")
